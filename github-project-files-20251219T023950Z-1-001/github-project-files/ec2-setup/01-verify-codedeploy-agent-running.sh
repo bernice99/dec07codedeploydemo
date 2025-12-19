@@ -2,7 +2,7 @@
 
 # Usage: 01-verify-codedeploy-running.sh [REGION]
 
-DEFAULT_REGION="eu-west-2"
+DEFAULT_REGION="us-east-1"
 INSTALL_SCRIPT="./install-codedeploy-agents.sh"
 
 REGION="${1:-$DEFAULT_REGION}"
