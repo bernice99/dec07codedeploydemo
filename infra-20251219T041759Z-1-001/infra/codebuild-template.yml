@@ -6,10 +6,10 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: python-hello-world-demo
-      ServiceRole: !!! YOUR IAM SERVICE ROLE ARN !!!
+      ServiceRole: arn:aws:iam::257974628653:role/Dec7throlesneeded
       Source:
         Type: GITHUB
-        Location: !!! YOUT GITHUB PROJECT htpps://.... .git !!!!
+        Location: https://github.com/bernice99/dec07codedeploydemo.git
         GitCloneDepth: 1
         InsecureSsl: false
         ReportBuildStatus: false
