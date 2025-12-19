@@ -1,0 +1,96 @@
+Lab: Lab03-codedeploy-python-webapp
+=============================
+
+Setup:
+====================================================================================================
+  - Cretae a new public Github repo (or use same as yesterday) but there are new files in 
+  https://drive.google.com/drive/folders/1l5TonFPmQ5T0IRGD9bofbFaivy8cBSqS?usp=drive_link
+  that you have to upload to your repo. Overwrite them all (if using yesterdays repo)
+
+ - You will need to create an Amazon Linux 2023 EC2 instance with public access and IP and tag it with  
+    Key: deployment-group
+	Value: ec2
+	- now ssh into it and install codedeploy agent!
+	- Use the scripts in ec2-setup folder ...
+	  - 00-open-port-5000-linux-fw.sh
+	  - 01-verify-codedeploy-agent-running  $YOUR_REGION
+	    - if you do not specify $YOUR_REGION, then default to eu-west-2
+		
+		
+  
+  Although this step deals with automating the codebuild project creation. There are some things that have not been automated
+  and must be created first.
+  
+  - Create an S3 bucket that contains the name "codebuild" and create 2 folders in it
+     - name first folder "output-artifact"
+     - name second folder "build-cache"
+  - Create an IAM Service Role for Codebuild to be able to have permisions to be able to perform all actions
+    in buildspec.yml
+ 
+====================================================================================================
+  
+ - The following step has files in Goggle drive link:
+   https://drive.google.com/drive/folders/18mtzDzOg9YHklFVj_xS2uY1gWzioqdSV?usp=drive_link
+   
+CodeBuild
+==========
+ - Now, we can reference the above resources in our CloudFormation template to create your CodeBuild project
+   but you have to reference the above resources you created in Setup.
+   - TODO: open codebuild-template.yml and replace missing values with your pre-created S3 buckets
+           and IAM Role info (look for text "!!!"). Once all the missing references
+		   are included, you can go on to next step.
+   - create codebuild project via script ...
+     01-create-codebuild-project-cfn-stack.sh
+	Note: all scripts default to aws region eu-west-2 - change it if do not want this
+	   
+   - Kick off a build to ensure everything is built correctly. use script ...
+	   02-start-codebuild-buildjob.sh
+   - go confirm artifact in S3 bucket upon success.
+   
+ - How can we furthur improve this automation? Send me a private chat message.
+ 
+ 
+CodeDeploy (Application & Deployment Group)
+=============================================
+ - Goto CodeDeploy service in Web Console
+  -  Create a new Application
+     - Select EC2 as compute platform
+  - Create deployment group
+    - Name it
+	- Enter an IAM Service Role for CodeDeploy 
+	  - You need to create one in IAM Service Role yourslef. Add IAM permisions ...
+	     - AWSCodeDeployRole
+		 - AmazonS3FullAccess
+		 - AmazonEC2FullAccess
+		 - if you get permission errors after when deploying, read the logs and update this policy.
+	- Deployment Type: Leave as "In-place"
+	- Environment configuration: Select checkbox: Amazon EC2 instances
+		- Add tag ...
+		    - Key: deployment-group
+	        - Value: ec2
+		- Should see ...
+		  - Matching instances ...1 unique matched instance
+    - Scroll all the way downº
+	  - Load balancer Section:
+	    - Disable "Enable load balancer"
+	- Press "Create deployment group"
+	
+
+CodeDeploy Deployment
+======================
+ - Press "Create deployment" button on top right
+   - Under "Revision type"
+     - option: My application is stored in Amazon S3 
+	    - paste the link to your codebuild zip articat to be deployed (ex: s3://aws-cicd-python-helloworld/codebuild-artifacts/python-hello-world.zip)
+   - Section Additional deployment behavior settings:
+     - select checkbox : Don't fail the deployment to an instance if this lifecycle event on the instance fails
+	 - select option:  Overwrite the content
+	 
+   - Press button "Create deployment"
+     - Click on "View events" link at bottom
+	 
+	 
+Verify App on Browser
+============================	
+- once done goto ec2 public ip on browser and append :5000
+ex: http://3.10.28.224:5000
